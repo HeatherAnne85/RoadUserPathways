@@ -1,2 +1,2 @@
-# DesireLines_2
+# DesireLines
  Python code for clustering trajectories
