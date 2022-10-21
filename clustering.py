@@ -130,7 +130,7 @@ for traj_sql in os.listdir(Home+"SQLite"):
         continue
     
     for obj in objects:
-        traj_red = obj.positions.getTrajectoryInPolygon(trim)  
+        traj_red = obj.positions.getTrajectoryInPolygon(trim)[0]  
         if obj.userType == 4 and checkIn(obj.positions,delete) == False and traj_red.length()>traj_min_length:  
             approach = getApproach(traj_red, app_polys)
             Full_traj['all'].append(traj_red.__mul__(1/mpp))
