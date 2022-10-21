@@ -18,6 +18,8 @@ import cv2
 import os
 import shapely.geometry as SG
 
+import utils
+
 
 def ml(pref, Traj):
     af = AffinityPropagation(preference=pref, random_state=1).fit(Traj)
@@ -25,19 +27,7 @@ def ml(pref, Traj):
     centers = af.cluster_centers_indices_
     n_clusters_ = len(af.cluster_centers_indices_) 
     return af, n_clusters_, labels, centers
-
-
-def checkIn(traj,poly):
-    P0=obj.positions[0]
-    PL=obj.positions[-1]
-    if delete.contains(SG.Point(P0.x,P0.y)) == False and delete.contains(SG.Point(PL.x,PL.y))==False:
-        return False
-    else:
-        return True
     
-
-def P_ave(p1,p2):
-    return SG.Point((p1[0]+p2[0])/2,(p1[1]+p2[1])/2)
 
 
 def plotPoly(image,polys,mpp):
@@ -106,12 +96,10 @@ def plotTrajectories(n_clusters_, labels, Full_traj, image_save_loc, approach):
     
 directions = ['N','E','S','W']
 n=20    #number of x-y coordinates in reduced trajectory
-Int = 'Mars'
-Bib = {'Arcis':1,'Arnulf':2,'Karl':3,'Mars':4}
+
 
 Home='C:/Users/heath/Desktop/trajectory_data/TUM/'+Int+'/'
 homography=inv(np.loadtxt(Home+'Geometry/homography-rectified-2.txt'))
-
 image_save_loc=Home+'clustering/'
 mpp = np.loadtxt(Home+'Geometry/mpp.txt')
 trim = SG.Polygon(np.load(Home+'Geometry/outerBoundary.npy'))
@@ -142,7 +130,7 @@ for traj_sql in os.listdir(Home+"SQLite"):
         continue
     
     for obj in objects:
-        traj_red = obj.positions.getTrajectoryInPolygon(trim)[0]  
+        traj_red = obj.positions.getTrajectoryInPolygon(trim)  
         if obj.userType == 4 and checkIn(obj.positions,delete) == False and traj_red.length()>traj_min_length:  
             approach = getApproach(traj_red, app_polys)
             Full_traj['all'].append(traj_red.__mul__(1/mpp))
@@ -202,6 +190,5 @@ for approach in Traj.keys():
     
     plotTrajectories(n_clusters_, labels, Full_traj[approach], image_save_loc, approach)
 
-print('IAMCHANGINGTHIS')
 
 
