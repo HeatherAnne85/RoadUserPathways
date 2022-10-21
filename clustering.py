@@ -17,8 +17,10 @@ import matplotlib.cm as cmx
 import cv2
 import os
 import shapely.geometry as SG
+import pickle
 
-import utils
+from utils import poly_utils as PU
+from utils import traj_utils as TU
 
 
 def ml(pref, Traj):
@@ -28,44 +30,6 @@ def ml(pref, Traj):
     n_clusters_ = len(af.cluster_centers_indices_) 
     return af, n_clusters_, labels, centers
     
-
-
-def plotPoly(image,polys,mpp):
-    for app, poly in app_polys.items():
-        points = poly.exterior.coords
-        point_list = []
-        for point in points:
-            point_list.append(moving.Point(point[0]/mpp,point[1]/mpp))
-        t = moving.Trajectory.fromPointList(point_list)
-        cvutils.cvPlot(image,t,(255, 0, 0),thickness=2)   
-        cv2.imwrite(Home+'clustering/polys.jpg', image)
-        
-    
-def polys(center, arm_centers):
-    l = len(arm_centers)
-    points = {}
-    approaches = {}
-    c = 0
-    for row in arm_centers:
-        points[directions[c]]=SG.Point(row)
-        points[directions[c]+directions[(c+1)%l]] = P_ave(row,arm_centers[(c+1)%l])
-        c+=1
-    c=0
-    for row in arm_centers:
-        vals = [value for key, value in points.items() if directions[c] in key]
-        vals.append(SG.Point(center[0][0],center[0][1]))
-        approaches[directions[c]]=SG.MultiPoint(vals).convex_hull
-        c+=1
-    return approaches
-
-
-def getApproach(traj_red, app_polys):
-    P=traj_red[0]
-    for app, poly in app_polys.items():
-        if poly.contains(SG.Point(P.x,P.y)):
-            return app
-    return "fail"
-
 
 def plotTrajectories(n_clusters_, labels, Full_traj, image_save_loc, approach):
     import matplotlib.colors as colors
@@ -94,11 +58,10 @@ def plotTrajectories(n_clusters_, labels, Full_traj, image_save_loc, approach):
     cv2.imwrite(image_save_loc+"all_traj_{}.jpg".format(approach), image_all)
         
     
-directions = ['N','E','S','W']
 n=20    #number of x-y coordinates in reduced trajectory
+traj_min_length = 100
 
-
-Home='C:/Users/heath/Desktop/trajectory_data/TUM/'+Int+'/'
+Home='C:/Users/heath/Desktop/trajectory_data/TUM/Mars/'
 homography=inv(np.loadtxt(Home+'Geometry/homography-rectified-2.txt'))
 image_save_loc=Home+'clustering/'
 mpp = np.loadtxt(Home+'Geometry/mpp.txt')
@@ -107,10 +70,13 @@ delete = SG.Polygon(np.load(Home+'Geometry/innerBoundary.npy'))
 arm_centers = np.load(Home+'Geometry/armCenters.npy')
 center = np.load(Home+'Geometry/intersectionCenter.npy')
 
-traj_min_length = 100
-
-app_polys = polys(center, arm_centers)
-#plotPoly(image,app_polys, mpp)
+try: 
+    with open(Home+'Geometry/approach_polys.pickle', 'rb') as handle:
+        app_polys = pickle.load(handle)   
+except:
+    app_polys = PU.polys(center, arm_centers, save=Home+'Geometry/approach_polys.pickle')
+    
+#PU.plotPoly(cv2.imread(Home+'Geometry/plan.png'),app_polys, mpp, image_save_loc+'polys.jpg')
 
 Traj={'all':[]}
 Full_traj={'all':[]}
@@ -131,8 +97,8 @@ for traj_sql in os.listdir(Home+"SQLite"):
     
     for obj in objects:
         traj_red = obj.positions.getTrajectoryInPolygon(trim)[0]  
-        if obj.userType == 4 and checkIn(obj.positions,delete) == False and traj_red.length()>traj_min_length:  
-            approach = getApproach(traj_red, app_polys)
+        if obj.userType == 4 and PU.checkIn(obj.positions, delete) == False and traj_red.length() > traj_min_length:  
+            approach = PU.getApproach(traj_red, app_polys)
             Full_traj['all'].append(traj_red.__mul__(1/mpp))
             if approach not in Full_traj:
                 Full_traj[approach] = []
