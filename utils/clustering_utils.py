@@ -73,7 +73,7 @@ class Observation(object):
     
 
 
-class Observations_set(object):
+class Clusters(object):
     '''
     Class to store observations
     '''
