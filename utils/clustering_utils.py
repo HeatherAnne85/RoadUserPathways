@@ -10,6 +10,8 @@ import pickle
 import os
 import numpy as np
 from itertools import groupby
+import matplotlib.pyplot as plt
+import matplotlib.cm as cmx
 
 
 class Observation(object):
@@ -35,14 +37,16 @@ class Observation(object):
                 
     
     def get_approach(self):
+        '''Function to find the directional approach based on the approach polygons'''
         P = self.trajectory[0]
         for app, poly in self.intersection.approach_polys.items():
             if poly.contains(SG.Point(P.x,P.y)):
                 self.approach = app
-    
+                continue
+ 
     
     def get_in_polygon(self):
-        #return true if a trajectory starts or ends within a shapely polygon
+        '''return true if a trajectory starts or ends within a Shapely polygon'''
         P0 = self.trajectory[0]
         PL = self.trajectory[-1]
         if self.intersection.inner_poly.contains(SG.Point(P0.x,P0.y)) == False and self.intersection.inner_poly.contains(SG.Point(PL.x,PL.y)) == False:
@@ -77,44 +81,35 @@ class Clusters(object):
     '''
     Class to store observations
     '''
-    def __init__(self, filedirectory, intersection, traj_min_length, num_points, num_SQL = 1000, obs_list = [], A_star = None, af = None):
+    
+    def __init__(self, filedirectory, intersection, traj_min_length, num_points, num_SQL = 1000, obs_list = [], af = None):
         self.filedirectory = filedirectory
         self.intersection = intersection
         self.traj_min_length = traj_min_length
         self.num_points = num_points
         self.num_SQL = num_SQL
         self.obs_list =  obs_list
-        self.A_star = A_star 
-        self.load_observations()
         self.af = af
+        
+        self.load_observations()
         
     
     def load_observations(self):   
-        
         c = 0 
-        
         for traj_sql in os.listdir(self.filedirectory+'SQLite/'):
-                    
             if c < self.num_SQL:
-                
                 SQL = self.filedirectory+'SQLite/{}'.format(traj_sql)
-                
                 print('loading SQLite: {}'.format(SQL))
                 try:
                     objects = storage.loadTrajectoriesFromSqlite(SQL, 'object')
                 except:
                     print('fail')
                     continue
-                
                 for obj in objects:
-                    
                     if obj.userType == 4 and len(obj.positions) > self.traj_min_length:
-                        
                         traj_red = obj.positions.getTrajectoryInPolygon(self.intersection.outer_poly)[0]  
-                        
-                        if len(traj_red) > self.traj_min_length:
+                        if traj_red.length() > self.traj_min_length:
                             obs = Observation(len(self.obs_list), obj.num, traj_red, self.intersection, trajectory_plot = traj_red.__mul__(1/self.intersection.mpp), num_points = self.num_points)
-                        
                             if obs.in_poly == False:
                                 self.obs_list.append(obs)    
             c+=1
@@ -164,14 +159,26 @@ class Clusters(object):
             self.plot_trajectories(Traj_plot, approach)
             
         if table == True:
-            x = x
+            self.output_table()
       
+     
+    def output_table(self):
+        Table = [[entry, np.count_nonzero(self.af.labels_ == entry), round(np.count_nonzero(self.af.labels_ == entry)*100/len(self.af.labels_),1)] for entry in set(self.af.labels_)]
+        with open(self.filedirectory+'clustering/output.txt', 'w') as fp:
+            fp.write('Pathway ID    # of trajectories    % of trajectories')
+            for item in Table:
+                fp.write("%s\n" % item)  
                             
+ 
+    def plot_raw_trajectories(self, trajectories, approach):
+        image = cv2.imread(self.filedirectory+'Geometry/plan.png')
+        for traj in trajectories:
+            cvutils.cvPlot(image, traj, (255, 0, 0), traj.length())  
+        cv2.imwrite(self.filedirectory+'clustering/raw_trajectories_trimmed{}.jpg'.format(approach), image)
+    
  
     def plot_trajectories(self, Full_traj, approach):
         import matplotlib.colors as colors
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cmx
         
         image_all = cv2.imread(self.filedirectory+'Geometry/plan.png')
         image_dl = cv2.imread(self.filedirectory+'Geometry/plan.png')
@@ -209,7 +216,8 @@ class Intersection(object):
     '''
     Class to define the geometry of the infrastructure
     '''
-    def __init__(self, inner_poly = None, outer_poly = None, center = None, arm_centers = None, mpp = None, approach_polys = None):
+    def __init__(self, filedirectory = None, inner_poly = None, outer_poly = None, center = None, arm_centers = None, mpp = None, approach_polys = None):
+        self.filedirectory = filedirectory
         self.inner_poly = inner_poly
         self.outer_poly = outer_poly
         self.center = center
@@ -220,34 +228,58 @@ class Intersection(object):
         
     def load_geometry(self, filedirectory):
         '''load existing geometrical information from given directory'''
+        self.filedirectory = filedirectory
         self.inner_poly = SG.Polygon(np.load(filedirectory+'/innerBoundary.npy'))
         self.outer_poly = SG.Polygon(np.load(filedirectory+'/outerBoundary.npy'))
         self.center = np.load(filedirectory+'/intersectionCenter.npy')
         self.arm_centers = np.load(filedirectory+'/armCenters.npy')
-        self.mpp = np.loadtxt(filedirectory+'/mpp.txt')    
-        with open(filedirectory+'/approach_polys.pickle', 'rb') as handle:
-            self.approach_polys = pickle.load(handle)  
+        self.mpp = np.loadtxt(filedirectory+'/mpp.txt')  
+        try:
+            with open(filedirectory+'/approach_polys.pickle', 'rb') as handle:
+                self.approach_polys = pickle.load(handle)
+                self.plotPoly()
+                
+        except:
+            self.approach_polys = self.polys(save = filedirectory+'/approach_polys.pickle') 
+            self.plotPoly()
         return
     
     
-    def define_geometry(self, approach_polys = None):
+    def point_input(self, image, info):
+        print(info[0])
+        plt.figure(figsize=(5,5))
+        plt.imshow(image)
+        point = np.array(plt.ginput(info[1], timeout=3000))  
+        plt.close('all')
+        return point
+        
+    
+    def define_geometry(self, filedirectory):
         '''write function to create polys needed for trimming and deleting'''
-        #self.approach_polys = self.poly(self.center, self.arm_centers, save = filedirectory+'/approach_polys.pickle')
+        self.filedirectory = filedirectory
+        self.mpp = np.loadtxt(filedirectory+'/mpp.txt')  
+        image = plt.imread(filedirectory + '/plan.png')
+        geometry = {'center': ['Click on the center of the intersection', 1, '/intersectionCenter.npy'],
+                           'arm_centers': ['Select a midpoint on all approach arms (clockwise starting with north)', 4, '/armCenters.npy'],
+                           'inner_poly':['Select four points of a polygon for deleting trajectories (inner_poly)', 4, '/innerBoundary.npy'],
+                           'outer_poly':['Select four points of a polygon for trimming trajectories (outer_poly)', 4, '/outerBoundary.npy']}
+        for key, info in geometry.items():
+            points = self.point_input(image, info)*self.mpp
+            np.save(filedirectory + info[2], points) 
+        self.load_geometry(self.filedirectory)
         return
 
-    
-    def save_geometry(self):
-        '''write function to save created geometric information about the intersection'''
-        return
-    
+   
 
-    def P_ave(p1,p2):
+    def P_ave(self,p1,p2):
         #return the midpoint of a line / average of two points
         return SG.Point((p1[0]+p2[0])/2,(p1[1]+p2[1])/2)
 
 
-    def plotPoly(self, image, out_file):
+    def plotPoly(self):
         #plot polygons on world image and save image
+        image = cv2.imread(self.filedirectory+'/plan.png')
+        out_file = self.filedirectory+'/approach_polys.jpg'
         for app, poly in self.approach_polys.items():
             point_list = [moving.Point(point[0]/self.mpp,point[1]/self.mpp) for point in poly.exterior.coords]
             t = moving.Trajectory.fromPointList(point_list)
@@ -255,25 +287,38 @@ class Intersection(object):
             cv2.imwrite(out_file, image)
 
 
+    def extend_Line(self,P1,P2,distance):
+        m = (P2[1]- P1[1]) / (P2[0] - P1[0])
+        theta = np.arctan(m)
+        x = np.sign(P2[0] - P1[0])*distance*np.cos(theta) + P1[0]
+        y = np.sign(P2[1] - P1[1])*distance*np.sin(theta) + P1[1]
+        return [x,y]
+        
+    
+
     def polys(self, directions = ['N','E','S','W'], save = False):
         #create polygons from points in the middle of the approach arms and the center of the intersection.
         #directions is input if it is not a four-approach intersection
         #save is a file pathways
         l = len(self.arm_centers)
+        arm_centers_extend = []
+        for row in self.arm_centers:
+            P = self.extend_Line(self.center[0],row,100)
+            arm_centers_extend.append(P)   
         points = {}
         approaches = {}
-        for c,row in enumerate(self.arm_centers):
+        for c,row in enumerate(arm_centers_extend):
             points[directions[c]]=SG.Point(row)
-            points[directions[c]+directions[(c+1)%l]] = self.P_ave(row,self.arm_centers[(c+1)%l])
-        for c,row in enumerate(self.arm_centers):
+            points[directions[c]+directions[(c+1)%l]] = self.P_ave(row,arm_centers_extend[(c+1)%l])
+        for c,row in enumerate(arm_centers_extend):
             vals = [value for key, value in points.items() if directions[c] in key]
             vals.append(SG.Point(self.center[0][0],self.center[0][1]))
             approaches[directions[c]]=SG.MultiPoint(vals).convex_hull
         if save !=False:
             with open(save, 'wb') as handle:
-                pickle.dump(approaches, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        self.approach_polys
-
+                pickle.dump(approaches, handle, protocol=pickle.HIGHEST_PROTOCOL)        
+        print(approaches)
+        return approaches
  
         
 
