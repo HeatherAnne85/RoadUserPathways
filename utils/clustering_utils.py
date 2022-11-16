@@ -80,7 +80,7 @@ class Observation(object):
 
 class Clusters(object):
     '''
-    Class to store observations
+    Class to store and cluster observations and output the results
     '''
     
     def __init__(self, filedirectory, intersection, traj_min_length, num_points, trim = False, delete = False, num_SQL = 1000, road_user_type = 4, cluster_omit = 0, obs_list = [], af = None):
