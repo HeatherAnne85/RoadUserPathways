@@ -6,6 +6,7 @@ from trafficintelligence import moving, cvutils, storage
 from sklearn.cluster import AffinityPropagation
 import sklearn.metrics as m
 import shapely.geometry as SG
+from shapely import affinity
 import pickle
 import os
 import numpy as np
@@ -82,12 +83,16 @@ class Clusters(object):
     Class to store observations
     '''
     
-    def __init__(self, filedirectory, intersection, traj_min_length, num_points, num_SQL = 1000, obs_list = [], af = None):
+    def __init__(self, filedirectory, intersection, traj_min_length, num_points, trim = False, delete = False, num_SQL = 1000, road_user_type = 4, cluster_omit = 0, obs_list = [], af = None):
         self.filedirectory = filedirectory
         self.intersection = intersection
         self.traj_min_length = traj_min_length
         self.num_points = num_points
+        self.trim = trim
+        self.delete = delete
         self.num_SQL = num_SQL
+        self.road_user_type = road_user_type
+        self.cluster_omit = cluster_omit
         self.obs_list =  obs_list
         self.af = af
         
@@ -106,11 +111,15 @@ class Clusters(object):
                     print('fail')
                     continue
                 for obj in objects:
-                    if obj.userType == 4 and len(obj.positions) > self.traj_min_length:
-                        traj_red = obj.positions.getTrajectoryInPolygon(self.intersection.outer_poly)[0]  
+                    if obj.userType == self.road_user_type and len(obj.positions) > self.traj_min_length:
+                        if self.trim == True:
+                            traj_red = obj.positions.getTrajectoryInPolygon(self.intersection.outer_poly)[0]  
+                        else:
+                            traj_red = obj.positions
                         if traj_red.length() > self.traj_min_length:
                             obs = Observation(len(self.obs_list), obj.num, traj_red, self.intersection, trajectory_plot = traj_red.__mul__(1/self.intersection.mpp), num_points = self.num_points)
-                            if obs.in_poly == False:
+                            if self.delete == False or obs.in_poly == False:
+                                print(f'added object {obj.num} {obs.approach}')
                                 self.obs_list.append(obs)    
             c+=1
                             
@@ -118,9 +127,7 @@ class Clusters(object):
    
 
     def cluster_trajectories(self, approach = 'all', plot = False, table = False):
-        '''
-        
-        '''
+
         Traj, lengths, Traj_plot = [], [], []
         
         for obs in self.obs_list:
@@ -130,6 +137,9 @@ class Clusters(object):
             lengths.append(obs.length)
             Traj_plot.append(obs.trajectory_plot)
             
+        if len(Traj) < 10:
+            return
+        
         Traj_1=np.asarray(Traj)   
         lengths_1 = np.array(lengths)
         
@@ -159,15 +169,25 @@ class Clusters(object):
             self.plot_trajectories(Traj_plot, approach)
             
         if table == True:
-            self.output_table()
+            self.output_table(approach, silhouette_score)
       
      
-    def output_table(self):
-        Table = [[entry, np.count_nonzero(self.af.labels_ == entry), round(np.count_nonzero(self.af.labels_ == entry)*100/len(self.af.labels_),1)] for entry in set(self.af.labels_)]
-        with open(self.filedirectory+'clustering/output.txt', 'w') as fp:
-            fp.write('Pathway ID    # of trajectories    % of trajectories')
+    def output_table(self, approach, silhouette_score):
+        Table = []
+        for entry in set(self.af.labels_):
+            if np.count_nonzero(self.af.labels_ == entry) < self.cluster_omit:
+                continue
+            Table.append([entry, np.count_nonzero(self.af.labels_ == entry), round(np.count_nonzero(self.af.labels_ == entry)*100/len(self.af.labels_),1)])
+        with open(self.filedirectory+f'clustering/{self.road_user_type}_{approach}.txt', 'w') as fp:
+            fp.write(f'Observed road users ({self.road_user_type}): {len(self.af.labels_)}\n')
+            fp.write(f'Number of total clusters: {len(set(self.af.labels_))}\n')
+            fp.write(f'Number of clusters greater than {self.cluster_omit}: {len(Table)-1}\n')
+            fp.write(f'Silhouette score: {silhouette_score}\n')
+            fp.write('Pathway ID, # of trajectories,  % of trajectories\n')
             for item in Table:
-                fp.write("%s\n" % item)  
+                for pos in item:
+                    fp.write(f"{pos},")  
+                fp.write("\n")  
                             
  
     def plot_raw_trajectories(self, trajectories, approach):
@@ -197,6 +217,8 @@ class Clusters(object):
         proportions = [round(clust*100/np.sum(frequencies),1) for clust in frequencies]
         
         for cluster in set(self.af.labels_):
+            if np.count_nonzero(self.af.labels_ == cluster) < self.cluster_omit:
+                continue
             indicies = [i for i, D in enumerate(self.af.labels_) if D == cluster]
             for i in indicies:
                 t = Full_traj[i]
@@ -204,10 +226,10 @@ class Clusters(object):
                 if i in self.af.cluster_centers_indices_:
                     cvutils.cvPlot(image_dl,t,colors[cluster%len(colors)],t.length(), thickness=2)   
                     cv2.arrowedLine(image_dl, t[t.length()-2].asint().astuple(), t[t.length()-1].asint().astuple(), colors[cluster%len(colors)], thickness=2, tipLength=5)
-                    cv2.putText(image_dl,str(frequencies[cluster])+'/'+str(proportions[cluster])+'%',t[t.length()-1].asint().astuple(),cv2.FONT_HERSHEY_PLAIN,1.3,colors[cluster%len(colors)],thickness=2)
+                    cv2.putText(image_dl,f'ID {cluster}/{frequencies[cluster]} obs/{proportions[cluster]}%',t[t.length()-1].asint().astuple(),cv2.FONT_HERSHEY_PLAIN,1.3,colors[cluster%len(colors)],thickness=2)
                     
-        cv2.imwrite(self.filedirectory+'clustering/desire_lines_TEST{}.jpg'.format(approach), image_dl)
-        cv2.imwrite(self.filedirectory+'clustering/all_traj__TEST{}.jpg'.format(approach), image_all)                
+        cv2.imwrite(self.filedirectory+f'clustering/{self.road_user_type}_{approach}_desire_lines.jpg', image_dl)
+        cv2.imwrite(self.filedirectory+f'clustering/{self.road_user_type}_{approach}_all.jpg', image_all)                
 
 
     
@@ -216,13 +238,14 @@ class Intersection(object):
     '''
     Class to define the geometry of the infrastructure
     '''
-    def __init__(self, filedirectory = None, inner_poly = None, outer_poly = None, center = None, arm_centers = None, mpp = None, approach_polys = None):
+    def __init__(self, filedirectory = None, inner_poly = None, outer_poly = None, center = None, arm_centers = None, mpp = None, approaches = None, approach_polys = None):
         self.filedirectory = filedirectory
         self.inner_poly = inner_poly
         self.outer_poly = outer_poly
         self.center = center
         self.arm_centers = arm_centers
         self.mpp = mpp                              #mpp is a meters per pixel value for the world image
+        self.approaches = approaches
         self.approach_polys = approach_polys
         return
         
@@ -233,14 +256,13 @@ class Intersection(object):
         self.outer_poly = SG.Polygon(np.load(filedirectory+'/outerBoundary.npy'))
         self.center = np.load(filedirectory+'/intersectionCenter.npy')
         self.arm_centers = np.load(filedirectory+'/armCenters.npy')
-        self.mpp = np.loadtxt(filedirectory+'/mpp.txt')  
+        self.mpp = np.loadtxt(filedirectory+'/mpp.txt') 
         try:
             with open(filedirectory+'/approach_polys.pickle', 'rb') as handle:
                 self.approach_polys = pickle.load(handle)
-                self.plotPoly()
-                
+                self.plotPoly()           
         except:
-            self.approach_polys = self.polys(save = filedirectory+'/approach_polys.pickle') 
+            self.approach_polys = self.polys(directions = self.approaches, save = filedirectory+'/approach_polys.pickle') 
             self.plotPoly()
         return
     
@@ -254,13 +276,14 @@ class Intersection(object):
         return point
         
     
-    def define_geometry(self, filedirectory):
+    def define_geometry(self, filedirectory, approaches):
         '''write function to create polys needed for trimming and deleting'''
         self.filedirectory = filedirectory
-        self.mpp = np.loadtxt(filedirectory+'/mpp.txt')  
+        self.mpp = np.loadtxt(filedirectory+'/mpp.txt') 
+        self.approaches = approaches
         image = plt.imread(filedirectory + '/plan.png')
         geometry = {'center': ['Click on the center of the intersection', 1, '/intersectionCenter.npy'],
-                           'arm_centers': ['Select a midpoint on all approach arms (clockwise starting with north)', 4, '/armCenters.npy'],
+                           'arm_centers': [f'Select a midpoint on approach arms {approaches} (starting with {approaches[0]})', len(approaches), '/armCenters.npy'],
                            'inner_poly':['Select four points of a polygon for deleting trajectories (inner_poly)', 4, '/innerBoundary.npy'],
                            'outer_poly':['Select four points of a polygon for trimming trajectories (outer_poly)', 4, '/outerBoundary.npy']}
         for key, info in geometry.items():
@@ -269,7 +292,6 @@ class Intersection(object):
         self.load_geometry(self.filedirectory)
         return
 
-   
 
     def P_ave(self,p1,p2):
         #return the midpoint of a line / average of two points
@@ -292,34 +314,29 @@ class Intersection(object):
         theta = np.arctan(m)
         x = np.sign(P2[0] - P1[0])*distance*np.cos(theta) + P1[0]
         y = np.sign(P2[1] - P1[1])*distance*np.sin(theta) + P1[1]
-        return [x,y]
+        return SG.Point(x,y)
         
-    
 
     def polys(self, directions = ['N','E','S','W'], save = False):
         #create polygons from points in the middle of the approach arms and the center of the intersection.
         #directions is input if it is not a four-approach intersection
         #save is a file pathways
-        l = len(self.arm_centers)
+        C = self.center[0]
         arm_centers_extend = []
         for row in self.arm_centers:
-            P = self.extend_Line(self.center[0],row,100)
-            arm_centers_extend.append(P)   
-        points = {}
+            arm_centers_extend.append(row)   
         approaches = {}
-        for c,row in enumerate(arm_centers_extend):
-            points[directions[c]]=SG.Point(row)
-            points[directions[c]+directions[(c+1)%l]] = self.P_ave(row,arm_centers_extend[(c+1)%l])
-        for c,row in enumerate(arm_centers_extend):
-            vals = [value for key, value in points.items() if directions[c] in key]
-            vals.append(SG.Point(self.center[0][0],self.center[0][1]))
-            approaches[directions[c]]=SG.MultiPoint(vals).convex_hull
+        for c,arm in enumerate(arm_centers_extend):
+            L1 = SG.LineString([C,arm])
+            L2 = affinity.rotate(L1,45,origin=SG.Point(C))
+            L3 = affinity.rotate(L1,-45,origin=SG.Point(C))
+            approach_poly = SG.MultiPoint(list(L2.coords) + list(L3.coords)+ list(L1.coords))
+            approaches[directions[c]] = approach_poly.convex_hull
         if save !=False:
             with open(save, 'wb') as handle:
-                pickle.dump(approaches, handle, protocol=pickle.HIGHEST_PROTOCOL)        
-        print(approaches)
+                pickle.dump(approaches, handle, protocol=pickle.HIGHEST_PROTOCOL)     
         return approaches
- 
+
         
 
 
