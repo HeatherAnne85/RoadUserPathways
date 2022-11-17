@@ -7,14 +7,14 @@ author: Heather Kaths
 
 import argparse
 
-import clustering_utils as cu
+import RoadUserPathways as rup
 
 #Parameters
 def create_args():
     parser = argparse.ArgumentParser(prog = 'road user pathways',
                                      description = 'trajectory clustering to find common pathway types')
 
-    parser.add_argument('--dataset_dir', default="../data/",
+    parser.add_argument('--dataset_dir', default="C:/Users/heath/Desktop/trajectory_data/TUM/Karl",
                         help="Path to directory that contains the trajectory SQLite files.", type=str)
     parser.add_argument('--approaches', default=['N','E','S','W'],
                         help="List with labels for the arms of the intersection (eg. ['N','E','S','W']", type=list)  
@@ -44,7 +44,7 @@ def create_args():
 def main():
     config = create_args()
     
-    dataset_dir = config["dataset_dir"]
+    dataset_dir = config["dataset_dir"] + "/"
     approaches = config["approaches"]
     num_points = config["num_points"]
     traj_min_length = config["traj_min_length"]
@@ -57,7 +57,7 @@ def main():
     cluster_omit = config["cluster_omit"]
     
     #Geometry
-    intersection = cu.Intersection()
+    intersection = rup.Intersection()
     if define_use == 'use':
         intersection.load_geometry(dataset_dir+'Geometry')
     else:
@@ -65,7 +65,7 @@ def main():
     
     #extract, cluster and plot trajectories
     for road_user_type in road_user_types:
-        observations = cu.Clusters(dataset_dir, intersection, traj_min_length, num_points, trim, delete, num_SQL, road_user_type, cluster_omit, obs_list=[])
+        observations = rup.Clusters(dataset_dir, intersection, traj_min_length, num_points, trim, delete, num_SQL, road_user_type, cluster_omit, obs_list=[])
         for approach in ['all'] + approaches:
             observations.cluster_trajectories(approach, plot = True, table = True)
               
