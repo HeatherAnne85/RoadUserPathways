@@ -29,15 +29,13 @@ RoadUserTypes = {"unknown": 0,
 ## Parameters
 | Command-line Options      | Default value   | Description |
 | ---                       | ---             | --- |
-
 | `--dataset_dir`             | `"../data/"`      | Path to directory that contains the trajectory SQLite files and geometric information. |
-| `--approaches`                 | `exid` | Name of the dataset (ind, round, exid, unid). Needed to apply dataset specific visualization adjustments. |
-| `--num_points`               | `26`            | Name of the recording given by a number with a leading zero. | 
-| `--traj_min_length`          | `4`               | During playback, only consider every nth frame. | 
-| `--traj_min_number`   | `False`           | Do not show the track window when clicking on a track. Only surrounding vehicle colors are displayed. | 
-| `--num_SQ`       | `False`           | Plot the rotated bounding boxes of all vehicles.  Please note, that for vulnerable road users, no bounding box is given. |  
-| `--trim`        | `False`           | Indicate the orientation of all vehicles by triangles. | 
-| `--delete`         | `False`           | Show the trajectory up to the current frame for every track. | 
-| `--road_user_types`  | `False`           | Show the remaining trajectory for every track. | 
-| `--define_use`       | `False`           | Annotate every track by its id. | 
-| `--cluster_omit`          | `False`           | Annotate every track by its class label. | 
+| `--approaches`                 | `['N','E','S','W']` | List with labels for the arms of the intersection (eg. ['N','E','S','W']). |
+| `--num_points`               | `20`            | The number of coordinate points taken from each trajectoriy to form the feature vector. | 
+| `--traj_min_length`          | `100`               | The minimum length for trajectories to be included in clustering (in timesteps). | 
+| `--num_SQ`       | `5`           | The maximum number of trajectory SQLite files from the dataset directory to include in clustering analysis. |  
+| `--trim`        | `False`           | Use polygon to trim trajectories (recommended if starting and ending position points vary in space). | 
+| `--delete`         | `False`           | Use polygon to delete trajectories starting or ending in polygon. | 
+| `--road_user_types`  | `False`           | List with road user types to cluster (eg [1,4]) as defined by *Traffic Intelligence*  | 
+| `--define_use`       | `False`           | Set to 'use' if geometry already defined, otherwise set to 'define'. | 
+| `--cluster_omit`          | `2`           | Minimum number of trajectories in a cluster to include in output | 
