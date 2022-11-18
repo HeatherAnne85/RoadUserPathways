@@ -27,3 +27,17 @@ RoadUserTypes = {"unknown": 0,
 - An **orthoimage** of the intersection.
 
 ## Parameters
+| Command-line Options      | Default value   | Description |
+| ---                       | ---             | --- |
+
+| `--dataset_dir`             | `"../data/"`      | Path to directory that contains the trajectory SQLite files and geometric information. |
+| `--approaches`                 | `exid` | Name of the dataset (ind, round, exid, unid). Needed to apply dataset specific visualization adjustments. |
+| `--num_points`               | `26`            | Name of the recording given by a number with a leading zero. | 
+| `--traj_min_length`          | `4`               | During playback, only consider every nth frame. | 
+| `--traj_min_number`   | `False`           | Do not show the track window when clicking on a track. Only surrounding vehicle colors are displayed. | 
+| `--num_SQ`       | `False`           | Plot the rotated bounding boxes of all vehicles.  Please note, that for vulnerable road users, no bounding box is given. |  
+| `--trim`        | `False`           | Indicate the orientation of all vehicles by triangles. | 
+| `--delete`         | `False`           | Show the trajectory up to the current frame for every track. | 
+| `--road_user_types`  | `False`           | Show the remaining trajectory for every track. | 
+| `--define_use`       | `False`           | Annotate every track by its id. | 
+| `--cluster_omit`          | `False`           | Annotate every track by its class label. | 
