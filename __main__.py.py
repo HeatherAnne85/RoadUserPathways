@@ -15,22 +15,20 @@ def create_args():
                                      description = 'trajectory clustering to find common pathway types')
 
     parser.add_argument('--dataset_dir', default="C:/Users/heath/Desktop/trajectory_data/TUM/Karl",
-                        help="Path to directory that contains the trajectory SQLite files.", type=str)
+                        help="Path to directory that contains the trajectory SQLite files and geometric information.", type=str)
     parser.add_argument('--approaches', default=['N','E','S','W'],
                         help="List with labels for the arms of the intersection (eg. ['N','E','S','W']", type=list)  
     parser.add_argument('--num_points', default=20,
                         help="The number of points in each feature vector.", type=int)
     parser.add_argument('--traj_min_length', default=100,
                         help="The minimum length for trajectories to be included in clustering in timesteps.", type=int)    
-    parser.add_argument('--traj_min_number', default=15,
-                        help="The minimum number of trajectories required to attempt clustering.", type=int)  
-    parser.add_argument('--num_SQL', default=5,
+    parser.add_argument('--num_SQL', default=20,
                         help="The maximum number of trajectory SQLite files to include in clustering analysis.", type=int)     
-    parser.add_argument('--trim', default=False,
+    parser.add_argument('--trim', default=True,
                         help="Use polygon to trim trajectories (recommended if starting and ending position points vary in space).", type=bool)    
-    parser.add_argument('--delete', default=False,
+    parser.add_argument('--delete', default=True,
                         help="Use polygon to delete trajectories starting or ending in polygon.", type=bool)  
-    parser.add_argument('--road_user_types', default=[4],
+    parser.add_argument('--road_user_types', default=[1,2,4],
                         help="List with road user types to analyse (eg [1,4]), from types = {car: 1, pedestrian: 2, motorcycle: 3, bicycle: 4, truck_bus: 5", type=list)  
     parser.add_argument('--define_use', default='use',
                         help="Set to 'use' if geometry already defined, otherwise set to 'define'", type=str)      
@@ -48,7 +46,6 @@ def main():
     approaches = config["approaches"]
     num_points = config["num_points"]
     traj_min_length = config["traj_min_length"]
-    traj_min_number = config["traj_min_number"]
     num_SQL = config["num_SQL"]
     trim = config["trim"]
     delete = config["delete"]
