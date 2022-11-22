@@ -74,7 +74,10 @@ class Observation(object):
                 else:
                     reduced.extend([self.trajectory[pos-1].x, self.trajectory[pos-1].y])
                     break
-        self.f_star = reduced
+        if len(reduced) == 2*self.num_points:
+            self.f_star = reduced
+        else:
+            self.f_star = []
     
 
 
@@ -119,7 +122,6 @@ class Clusters(object):
                         if traj_red.length() > self.traj_min_length:
                             obs = Observation(len(self.obs_list), obj.num, traj_red, self.intersection, trajectory_plot = traj_red.__mul__(1/self.intersection.mpp), num_points = self.num_points)
                             if self.delete == False or obs.in_poly == False:
-                                print(f'added object {obj.num} {obs.approach}')
                                 self.obs_list.append(obs)    
             c+=1
                             
@@ -131,7 +133,7 @@ class Clusters(object):
         Traj, lengths, Traj_plot = [], [], []
         
         for obs in self.obs_list:
-            if approach != 'all' and obs.approach != approach:
+            if (approach != 'all' and obs.approach != approach) or obs.f_star == []:
                 continue                    
             Traj.append(obs.f_star)
             lengths.append(obs.length)
@@ -140,14 +142,14 @@ class Clusters(object):
         if len(Traj) < 10:
             return
         
-        Traj_1=np.asarray(Traj)   
+        Traj_1=np.asarray(Traj)
         lengths_1 = np.array(lengths)
         
         X, ss, clusts = [], [], []
         
         for x in range(-5000,-100,100):
             
-            af = AffinityPropagation(preference=lengths_1+x, random_state=1).fit(Traj_1)
+            af = AffinityPropagation(preference=x, random_state=1).fit(Traj_1)
 
             try:
                 silhouette_score = m.silhouette_score(Traj_1, af.labels_)
@@ -226,7 +228,7 @@ class Clusters(object):
                 if i in self.af.cluster_centers_indices_:
                     cvutils.cvPlot(image_dl,t,colors[cluster%len(colors)],t.length(), thickness=2)   
                     cv2.arrowedLine(image_dl, t[t.length()-2].asint().astuple(), t[t.length()-1].asint().astuple(), colors[cluster%len(colors)], thickness=2, tipLength=5)
-                    cv2.putText(image_dl,f'ID {cluster}/{frequencies[cluster]} obs/{proportions[cluster]}%',t[t.length()-1].asint().astuple(),cv2.FONT_HERSHEY_PLAIN,1.3,colors[cluster%len(colors)],thickness=2)
+                    cv2.putText(image_dl,f'ID {cluster}/{frequencies[cluster]} obs/{proportions[cluster]}%',t[t.length()-np.random.randint(1,20)].asint().astuple(),cv2.FONT_HERSHEY_PLAIN,1,colors[cluster%len(colors)],thickness=2)
                     
         cv2.imwrite(self.filedirectory+f'clustering/{self.road_user_type}_{approach}_desire_lines.jpg', image_dl)
         cv2.imwrite(self.filedirectory+f'clustering/{self.road_user_type}_{approach}_all.jpg', image_all)                
