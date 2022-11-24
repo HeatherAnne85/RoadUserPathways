@@ -14,7 +14,7 @@ def create_args():
     parser = argparse.ArgumentParser(prog = 'road user pathways',
                                      description = 'trajectory clustering to find common pathway types')
 
-    parser.add_argument('--dataset_dir', default="../data",
+    parser.add_argument('--dataset_dir', default="./data",
                         help="Path to directory that contains the trajectory SQLite files and geometric information.", type=str)
     parser.add_argument('--approaches', default=['N','E','S','W'],
                         help="List with labels for the arms of the intersection (eg. ['N','E','S','W']", type=list)  
