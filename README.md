@@ -2,8 +2,8 @@
 Python code for clustering trajectory data extracted from video data. The clustered trajectories can be used to examine the tactical behaviour of road users crossing intersections. For example, the *desire lines* of pedestrians and cyclists, or the turning rates for all types of road users can be analysed. 
 
 <p align="center">
-  <img src="Example_plot_clustered_trajectories.jpg"  width=50% height=50%>
-  <img src="Example_plot_pathways.jpg"  width=50% height=50%>
+  <img src="Example_plot_clustered_trajectories.jpg"  width=30% height=30%>
+  <img src="Example_plot_pathways.jpg"  width=30% height=30%>
 </p>
 
 ## Dependencies
