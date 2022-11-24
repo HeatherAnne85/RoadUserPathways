@@ -1,8 +1,7 @@
 # RoadUserPathways
 Python code for clustering trajectory data extracted from video data. The clustered trajectories can be used to examine the tactical behaviour of road users crossing intersections. For example, the *desire lines* of pedestrians and cyclists, or the turning rates for all types of road users can be analysed. 
 
-![Example plot of clustered cyclist trajectories](Example_plot_clustered_trajectories.jpg) 
-![Representative pathway shapes (desire line)](Example_plot_pathways.jpg)
+![Example plot of clustered cyclist trajectories](Example_plot_clustered_trajectories.jpg)|![Representative pathway shapes (desire line)](Example_plot_pathways.jpg)
 
 ## Dependencies
 - OpenCV
