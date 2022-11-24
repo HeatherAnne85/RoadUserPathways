@@ -325,7 +325,7 @@ class Intersection(object):
             approaches[directions[c]] = approach_poly.convex_hull
         if save !=False:
             with open(save, 'wb') as handle:
-                pickle.dump(approaches, handle, protocol=pickle.HIGHEST_PROTOCOL)     
+                pickle.dump(approaches, handle)     
         return approaches
 
         
