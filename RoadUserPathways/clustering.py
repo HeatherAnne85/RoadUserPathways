@@ -181,7 +181,7 @@ class Clusters(object):
             if np.count_nonzero(self.af.labels_ == entry) < self.cluster_omit:
                 continue
             Table.append([entry, np.count_nonzero(self.af.labels_ == entry), round(np.count_nonzero(self.af.labels_ == entry)*100/len(self.af.labels_),1)])
-        with open(self.filedirectory+f'clustering/{self.road_user_type}_{approach}.txt', 'w') as fp:
+        with open(self.filedirectory+f'output/{self.road_user_type}_{approach}.txt', 'w') as fp:
             fp.write(f'Observed road users ({self.road_user_type}): {len(self.af.labels_)}\n')
             fp.write(f'Number of total clusters: {len(set(self.af.labels_))}\n')
             fp.write(f'Number of clusters greater than {self.cluster_omit}: {len(Table)-1}\n')
@@ -226,8 +226,8 @@ class Clusters(object):
                     cv2.arrowedLine(image_dl, t[t.length()-2].asint().astuple(), t[t.length()-1].asint().astuple(), colors[cluster%len(colors)], thickness=2, tipLength=5)
                     cv2.putText(image_dl,f'ID {cluster}/{frequencies[cluster]} obs/{proportions[cluster]}%',t[t.length()-np.random.randint(1,20)].asint().astuple(),cv2.FONT_HERSHEY_PLAIN,1,colors[cluster%len(colors)],thickness=2)
                     
-        cv2.imwrite(self.filedirectory+f'clustering/{self.road_user_type}_{approach}_desire_lines.jpg', image_dl)
-        cv2.imwrite(self.filedirectory+f'clustering/{self.road_user_type}_{approach}_all.jpg', image_all)                
+        cv2.imwrite(self.filedirectory+f'output/{self.road_user_type}_{approach}_desire_lines.jpg', image_dl)
+        cv2.imwrite(self.filedirectory+f'output/{self.road_user_type}_{approach}_all.jpg', image_all)                
 
 
     
