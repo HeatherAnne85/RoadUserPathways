@@ -35,6 +35,16 @@ RoadUserTypes = {"unknown": 0,
 - A **scale factor** relating the image pixels to UTM meters (meters/pixel).
 - An **orthoimage** of the intersection.
 
+# Trajectory pre-processing
+Trajectory data can be pre-processed to increase the quality of the clustering results. This is particularly necessary if the trajectories are incomplete, meaning that they do not contain the entire crossing maneuver of the road user, and if the start/end position coordinates of the trajectories differ in space. 
+These functionalities work as follows: 
+1.	Incomplete trajectories can be removed using a polygon outlining the most important part of the intersection (or other part of the road infrastructure). This polygon is shown in blue below. To input this polygon on an areal image, the analyst should set the –define_use parameter to “define”. To use this polygon to filter out incomplete trajectories, the analyst should set the –delete parameter to “True”. 
+2.	Trajectories can be trimmed to ensure comparability using a polygon that defines the area of interest or the starting/end points of the shortest trajectories. An example is shown in green below. To input this polygon on an areal image, the analyst should set the –define_use parameter to “define”. To use this polygon to trim trajectories (remove position coordinates at the start/end of the trajectory that fall outside the polygon), the analyst should set the –trim parameter to “True”.
+
+<p align="center">
+  <img src="Example_polygons_trimming_filtering.jpg"  width=49% height=49%>
+</p>
+
 ## Parameters
 | Command-line Options      | Default value   | Description |
 | ---                       | ---             | --- |
