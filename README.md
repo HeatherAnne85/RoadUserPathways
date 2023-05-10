@@ -19,8 +19,8 @@ The following images display the clustered trajectories from cyclists crossing a
 - pickle
 
 ## Data
-RoadUserPathways takes trajectory data and geometric information about road infrastructure to cluster trajectories into commonly used pathways. The necessary input data is:
-- **Trajectory data** stored in an SQLite database and defined in the *Traffic Intelligence* project. Trajectories must describe the complete crossing maneouvre of the road user and cannot be disjointed in the middle of the video frame. Trajectories are described in a local coordinate system in which the coordinate point (0,0) is the upper left-hand corner of the video frame. Position coordinates are given in UTM meters and the velocity in m/frame. RoadUserPathways was developed using trajectories extracted from video data with 25 position coordinates per second (one per video frame). Trajectories with a lower frequency of observations will work as long as the shape of the crossing manoeuvre is captured.
+RoadUserPathways uses trajectory data and geometric information about road infrastructure to cluster trajectories into commonly used pathways. The necessary input data is:
+- **Trajectory data** stored in an SQLite database as defined in the *Traffic Intelligence* project. Trajectories must describe the complete crossing maneouvre of the road user and cannot be disjointed in the middle of the video frame. Trajectories are described in a local coordinate system in which the coordinate point (0,0) is the upper left-hand corner of the video frame. Position coordinates are given in UTM meters and the velocity in m/frame. RoadUserPathways was developed using trajectories extracted from video data with 25 position coordinates per second (one per video frame). Trajectories with a lower frequency of observations will work as long as the shape of the crossing manoeuvre is captured. Code to convert trajectory data in other common formats (csv files from DataFromSky or inD) to the SQLite Traffic Intelligence format will be available soon. 
 
 The road user types defined by *Traffic Intelligence* are used:
 ```
