@@ -45,6 +45,8 @@ These functionalities work as follows:
   <img src="Example_polygons_trimming_filtering.jpg"  width=60% height=60%>
 </p>
 
+In the figure, the orange dashed trajectory will be filtered from the dataset because it starts within the blue polygon. The dashed sections of the red trajectory will be removed to ensure comparability.
+
 ## Parameters
 | Command-line Options      | Default value   | Description |
 | ---                       | ---             | --- |
