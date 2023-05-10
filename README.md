@@ -42,7 +42,7 @@ These functionalities work as follows:
 2.	Trajectories can be trimmed to ensure comparability using a polygon that defines the area of interest or the starting/end points of the shortest trajectories. An example is shown in green below. To input this polygon on an areal image, the analyst should set the –define_use parameter to “define”. To use this polygon to trim trajectories (remove position coordinates at the start/end of the trajectory that fall outside the polygon), the analyst should set the –trim parameter to “True”.
 
 <p align="center">
-  <img src="Example_polygons_trimming_filtering.jpg"  width=49% height=49%>
+  <img src="Example_polygons_trimming_filtering.jpg"  width=60% height=60%>
 </p>
 
 ## Parameters
