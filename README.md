@@ -47,6 +47,8 @@ These functionalities work as follows:
 
 In the figure, the orange dashed trajectory will be filtered from the dataset because it starts within the blue polygon. The dashed sections of the red trajectory will be removed to ensure comparability.
 
+The analyst also has the option to cluster trajectories from road users approaching from each arm of the intersection separately. To do this, the center point of the intersection and a point along each approach arm of the intersection can be selected from an areal image by setting the `--define_use` parameter to “define”. The approaches of interest can be input using the “—approaches” parameter. For example, if a T-intersection with no north approach is to be analyzed, “—approaches” should be set to “[‘E’,’S’,’W’]”. 
+
 ## Parameters
 | Command-line Options      | Default value   | Description |
 | ---                       | ---             | --- |
