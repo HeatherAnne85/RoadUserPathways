@@ -68,8 +68,16 @@ The expected clusters vary with regard to the number of observations in each clu
 
 The Python scikit-learn implementation of Affinity Propagation (Pedregosa et al., 2011) is used to cluster the trajectory data in the A^* matrix. The preference parameter describes the suitability of each observation to be used as an exemplar and influences the number of clusters that are produced. In RoadUserPathways, the multiple preference parameters are tested and the resulting clustering structure is evaluated using the average Silhouette Score s ̅. The preference parameter leading to the highest s ̅ is selected. If multiple preference parameters deliver the same s ̅, the one leading to the highest s ̅ and lowest number of clusters is selected.
 
-The A^* matrix format described above is the basic input for (nearly) all of the clustering methods included in scikit-learn. Therefore, although Affinity Propagation is implemented in RoadUserPathways and has been found to provide useful results, it is straightforward to switch to a different centroid-based clustering method included in scikit-learn, such as k-means (although with this method the number of clusters has to be specified by the analyst).
+The $A^*$ matrix format described above is the basic input for (nearly) all of the clustering methods included in scikit-learn. Therefore, although Affinity Propagation is implemented in RoadUserPathways and has been found to provide useful results, it is straightforward to switch to a different centroid-based clustering method included in scikit-learn, such as k-means (although with this method the number of clusters has to be specified by the analyst).
 
 First, a qualitative comparison of the clusters obtained using Affinity Propagation, k-means and Mean Shift indicated that the best results were obtained with Affinity Propagation. In addition to the good results, a strong advantage of this algorithm is that the number of clusters is determined as an output of the algorithm and is not required as input, reducing the influence of the analyst on the number of pathway types identified. However, a more systematic assessment of clustering algorithms is necessary. 
 
+## References
+Frey BJ and Dueck D (2007) Clustering by passing messages between data points. Science 315(5814). American Association for the Advancement of Science: 972–976.
+
+Gillies S (2022) Shapely. Creative Commons Attribution 3.0 United States License. Available at: https://shapely.readthedocs.io/en/stable/manual.html.
+
+Jackson S, Miranda-Moreno L, St-Aubin P, et al. (2013) A Flexible, Mobile Video Camera System and Open Source Video Analysis Software for Road Safety and Behavioural Analysis. Transportation Research Record: Journal of the Transportation Research Board 2365: 90–98. DOI: http://dx.doi.org/10.3141/2365-12.
+
+Pedregosa F, Varoquaux G, Gramfort A, et al. (2011) Scikit-learn: Machine learning in Python. the Journal of machine Learning research 12. JMLR. org: 2825–2830.
 
