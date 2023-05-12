@@ -18,6 +18,11 @@ The following images display the clustered trajectories from cyclists crossing a
 - os
 - pickle
 
+## Workflow
+<p align="center">
+  <img src="Workflow.jpg"  width=60% height=60%>
+</p>
+
 ## Data
 RoadUserPathways uses trajectory data and geometric information about road infrastructure to cluster trajectories into commonly used pathways. The necessary input data is:
 - **Trajectory data** stored in an SQLite database as defined in the *Traffic Intelligence* project. Trajectories must describe the complete crossing maneouvre of the road user and cannot be disjointed in the middle of the video frame. Trajectories are described in a local coordinate system in which the coordinate point (0,0) is the upper left-hand corner of the video frame. Position coordinates are given in UTM meters and the velocity in m/frame. RoadUserPathways was developed using trajectories extracted from video data with 25 position coordinates per second (one per video frame). Trajectories with a lower frequency of observations will work as long as the shape of the crossing manoeuvre is captured. Code to convert trajectory data in other common formats (csv files from DataFromSky or inD) to the SQLite Traffic Intelligence format will be available soon. 
@@ -35,7 +40,7 @@ RoadUserTypes = {"unknown": 0,
 - A **scale factor** relating the image pixels to UTM meters (meters/pixel).
 - An **orthoimage** of the intersection.
 
-# Trajectory pre-processing
+## Trajectory pre-processing
 Trajectory data can be pre-processed to increase the quality of the clustering results. This is particularly necessary if the trajectories are incomplete, meaning that they do not contain the entire crossing maneuver of the road user, and if the start/end position coordinates of the trajectories differ in space. 
 These functionalities work as follows: 
 1.	Incomplete trajectories can be removed using a polygon outlining the most important part of the intersection (or other part of the road infrastructure). This polygon is shown in blue below. To input this polygon on an areal image, the analyst should set the `--define_use` parameter to `define`. To use this polygon to filter out incomplete trajectories, the analyst should set the `--delete` parameter to `True`. 
