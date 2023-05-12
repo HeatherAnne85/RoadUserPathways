@@ -20,7 +20,7 @@ The following images display the clustered trajectories from cyclists crossing a
 
 ## Workflow
 <p align="center">
-  <img src="Workflow.jpg"  width=60% height=60%>
+  <img src="Workflow.jpg"  width=100% height=100%>
 </p>
 
 ## Data
