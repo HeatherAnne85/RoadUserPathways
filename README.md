@@ -69,6 +69,11 @@ The analyst also has the option to cluster trajectories from road users approach
 | `--cluster_omit`          | `2`           | Minimum number of trajectories in a cluster to include in output | 
 
 ## Notes about the output
+The tool yields three main outputs:
+- The number of pathway types used by road users
+- A representative trajectory that characterizes the average shape of each pathway type
+- The number and percentage of road users who use each pathway type
+
 Users can regulate to what extent odd or irregular trajectories are included in the output using the parameter `--cluster_omit`. If this parameter is set to a larger number, only pathway types used by many cyclists will be included in the output. If this number is very low, all anomalies will also be included in the output. 
 
 If a subset of the trajectories data from one approach arm is analysed, the identified clusters will differ from those emerging from clustering the whole dataset for the same approach. This is because the relative similarity of the trajectories is greater when all originate from the same arm of the intersection. Generally, if all the clusters from all arms are summed, the total number of clusters will be larger than the number of clusters resulting when all trajectories are analysed together. 
