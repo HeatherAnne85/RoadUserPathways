@@ -9,6 +9,7 @@ The following images display the clustered trajectories from cyclists crossing a
 </p>
 
 If you use this code, please cite the paper: 
+
 Kaths, H. A. (2023). Crossing intersections: A tool for investigating road user pathways. Environment and Planning B: Urban Analytics and City Science. https://doi.org/10.1177/23998083231215462
 
 ## Dependencies
